@@ -45,11 +45,11 @@ num_gpus = 4
 
 
 class ReplayBuffer:
-    '''
+    """
     Dynamic-sized replay buffer.
     
     window_size = c * (1 + beta * ((N / c) ** alpha - 1) / alpha)
-    '''
+    """
     outcome_trans = {1: 0, -1: 1, 0: 2}
 
     def __init__(self, alpha, beta, c):

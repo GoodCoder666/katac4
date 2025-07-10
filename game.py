@@ -1,5 +1,7 @@
-import numpy as np
 import random
+
+import numpy as np
+
 
 class ConnectFour:
     def __init__(self, height=None, width=None, forbidden_point=None):

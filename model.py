@@ -1,10 +1,10 @@
-'''
+"""
 References:
 - https://arxiv.org/pdf/1902.10565v5
 - https://github.com/lightvector/KataGo/blob/master/docs/KataGoMethods.md
 - https://github.com/lightvector/KataGo/blob/master/python/model_pytorch.py
 - https://github.com/shindavid/AlphaZeroArcade/blob/main/py/shared/net_modules.py
-'''
+"""
 
 
 from torch import nn
@@ -14,7 +14,7 @@ import torch.nn.functional as F
 
 class KataGPool(nn.Module):
     def __init__(self):
-        super(KataGPool, self).__init__()
+        super().__init__()
 
     def forward(self, x):
         width_scale = (x.size(3) - 10.5) / 3
@@ -25,7 +25,7 @@ class KataGPool(nn.Module):
 
 class ConvBlock(nn.Module):
     def __init__(self, c_in, c_out, kernel_size=3, stride=1, padding=1):
-        super(ConvBlock, self).__init__()
+        super().__init__()
         self.norm = nn.BatchNorm2d(c_in)
         self.conv = nn.Conv2d(c_in, c_out, kernel_size, stride, padding, bias=False)
 
@@ -38,7 +38,7 @@ class ConvBlock(nn.Module):
 
 class ConvBlockWithGPool(nn.Module):
     def __init__(self, c_in: int, c_out: int, c_gpool: int):
-        super(ConvBlockWithGPool, self).__init__()
+        super().__init__()
         self.norm = nn.Sequential(
             nn.BatchNorm2d(c_in),
             nn.ReLU(inplace=True)
@@ -61,7 +61,7 @@ class ConvBlockWithGPool(nn.Module):
 
 class ResBlock(nn.Module):
     def __init__(self, c_in, c_mid, c_gpool=None):
-        super(ResBlock, self).__init__()
+        super().__init__()
         if c_gpool:
             c_mid -= c_gpool
             self.conv1 = ConvBlockWithGPool(c_in, c_mid, c_gpool)
@@ -76,7 +76,7 @@ class ResBlock(nn.Module):
 class Bottlenest(nn.Module):
     # https://raw.githubusercontent.com/lightvector/KataGo/master/images/docs/bottlenecknestedresblock.png
     def __init__(self, c_in, c_gpool=None):
-        super(Bottlenest, self).__init__()
+        super().__init__()
         c_mid = c_in // 2
         self.bottlenest = nn.Sequential(
             ConvBlock(c_in, c_mid, kernel_size=1, padding=0),
@@ -91,7 +91,7 @@ class Bottlenest(nn.Module):
 
 class PolicyHead(nn.Module):
     def __init__(self, c_in, c_head):
-        super(PolicyHead, self).__init__()
+        super().__init__()
         self.conv1 = ConvBlockWithGPool(c_in, c_head, c_head)
         self.conv2 = ConvBlock(c_head, 1, kernel_size=1, padding=0)
 
@@ -101,7 +101,7 @@ class PolicyHead(nn.Module):
 
 class ValueHead(nn.Module):
     def __init__(self, c_in, c_head):
-        super(ValueHead, self).__init__()
+        super().__init__()
         self.conv = ConvBlock(c_in, c_head)
         self.pool = KataGPool()
         self.linear = nn.Linear(3 * c_head, 3)
@@ -118,7 +118,7 @@ class Net(nn.Module):
     Policy-value network module.
     """
     def __init__(self, c_trunk=128, c_gpool=32, c_head=32):
-        super(Net, self).__init__()
+        super().__init__()
 
         # common layers
         self.input_conv = nn.Conv2d(6, c_trunk, kernel_size=3, stride=1, padding=1)
@@ -139,9 +139,9 @@ class Net(nn.Module):
 
 
 class InferenceGraph:
-    '''
+    """
     Wrapper around the model, enabling CUDA graph inference.
-    '''
+    """
     def __init__(self, net, device, board_height, board_width):
         self.net = net.to(device).eval()
         self.device = device

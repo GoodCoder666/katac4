@@ -40,7 +40,7 @@ pcr_rate = 0.25
 tiny_playouts = 160
 large_playouts = 800
 
-parallel_games = 20
+parallel_games = 16
 num_gpus = 4
 
 

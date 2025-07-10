@@ -127,7 +127,14 @@ def selfplay_worker(worker_id, shared_model, replay_queue):
             acts = np.array(acts, dtype=np.int32)
             data_prob = np.zeros((game.height, game.width), dtype=np.float32)
             data_prob[game.top[acts], acts] = probs
-            history.append((state, data_prob))
+
+            # drop policy samples for fast games; done by setting mcts_probs to zero
+            if fast_game:
+                placeholder = np.zeros((game.height, game.width), dtype=np.float32)
+                history.append((state, placeholder))
+            else:
+                history.append((state, data_prob))
+
             if step < direct_moves:
                 acts, probs, _ = graph.policy_value_fn(game)
                 action = np.random.choice(acts, p=probs)
@@ -210,6 +217,7 @@ def train():
                 continue
 
             policy_loss = value_loss = entropy = 0.0
+            policy_count = 0
 
             # compute metrics
             optimizer.zero_grad()
@@ -221,14 +229,25 @@ def train():
 
                 policy_logits, value_logits = net(states)
                 policy_logits = policy_logits.flatten(1)
-
                 log_act_probs = F.log_softmax(policy_logits, dim=1)
-                policy_loss -= torch.sum(mcts_probs * log_act_probs, dim=1).mean()
+
+                # policy loss: leave fast samples unconstrained
+                with torch.no_grad():
+                    policy_mask = mcts_probs.sum(dim=1).ge(0.9)
+                    n_policy = policy_mask.sum().item()
+                if n_policy > 0:
+                    policy_loss -= torch.sum(mcts_probs[policy_mask] * log_act_probs[policy_mask])
+                    policy_count += n_policy
+
+                # value loss: utilize all samples
                 value_loss += F.cross_entropy(value_logits, outcomes, reduction='sum')
+
+                # entropy: OK here to keep fast samples; only for monitoring use
                 with torch.no_grad():
                     entropy -= torch.sum(torch.exp(log_act_probs) * log_act_probs, dim=1).mean()
 
-            policy_loss /= 16.0
+            if policy_count > 0:
+                policy_loss /= policy_count
             value_loss /= batch_size
             entropy /= 16.0
 

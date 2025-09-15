@@ -2,6 +2,12 @@
 
 An AlphaZero engine for [Saiblo Connect4](https://www.saiblo.net/game/3), featuring a pure Python implementation of key [KataGo](https://github.com/lightvector/KataGo) techniques.
 
+> [!NOTE]
+>
+> The second main run started on August 18, 2025, and ended on August 31. The code and logs were uploaded on September 15, but this document has not yet been updated to reflect these changes. Some of the data may be outdated, but the instructions should still be valid.
+>
+> We will fix this later, along with the Elo data.
+
 ## Project Structure
 
 ```

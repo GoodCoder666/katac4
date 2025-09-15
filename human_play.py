@@ -8,12 +8,18 @@ from model import InferenceGraph, Net
 c_puct = 1.1
 c_fpu = 0.2
 n_playout = 160
-model_path = './katac4_b3c128nbt_30000.pth'
+model_path = './weights/b3c128nbt_2025-08-18_19-22-00/katac4_b3c128nbt_30000.pth'
+
+def load_model(path):
+    state_dict = torch.load(path, map_location='cpu', weights_only=True)
+    state_dict['policy_head.conv2.conv.weight'] = \
+        state_dict['policy_head.conv2.conv.weight'][0:1]
+    net = Net(c_policy=1)
+    net.load_state_dict(state_dict)
+    return net
 
 device = torch.device('cuda')
-net = Net().to(device)
-net.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
-net.eval()
+net = load_model(model_path).eval().to(device)
 
 game = ConnectFour(9, 9, (0, 0))
 graph = InferenceGraph(net, device, game.height, game.width)

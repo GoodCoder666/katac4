@@ -27,8 +27,8 @@ if torch.backends.cudnn.enabled:
 print()
 
 with torch.inference_mode():
-    policy, value = net(dummy_input())
-    print(policy.shape, value.shape)
+    (policy, opp_policy), value = net(dummy_input())
+    print(policy.shape, opp_policy.shape, value.shape)
 
 start = time()
 net.train()

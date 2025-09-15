@@ -27,7 +27,7 @@ print('Load time:', load_time, file=sys.stderr)
 
 def policy_value_fn(game):
     state = torch.FloatTensor(game.state()).unsqueeze(0)
-    policy_logits, value_logits = model(state)
+    (policy_logits,), value_logits = model(state)
     sensible_moves = game.sensible_moves()
     policy_logits = policy_logits.squeeze(0)[game.top[sensible_moves], sensible_moves]
     policy = F.softmax(policy_logits, dim=0).numpy()

@@ -2,7 +2,7 @@
 References:
 - https://arxiv.org/pdf/1902.10565v5
 - https://github.com/lightvector/KataGo/blob/master/docs/KataGoMethods.md
-- https://github.com/lightvector/KataGo/blob/master/python/model_pytorch.py
+- https://github.com/lightvector/KataGo/blob/master/python/katago/train/model_pytorch.py
 - https://github.com/shindavid/AlphaZeroArcade/blob/main/py/shared/net_modules.py
 """
 
@@ -90,10 +90,10 @@ class Bottlenest(nn.Module):
 
 
 class PolicyHead(nn.Module):
-    def __init__(self, c_in, c_head):
+    def __init__(self, c_policy, c_in, c_head):
         super().__init__()
         self.conv1 = ConvBlockWithGPool(c_in, c_head, c_head)
-        self.conv2 = ConvBlock(c_head, 1, kernel_size=1, padding=0)
+        self.conv2 = ConvBlock(c_head, c_policy, kernel_size=1, padding=0)
 
     def forward(self, x):
         return self.conv2(self.conv1(x))
@@ -117,7 +117,7 @@ class Net(nn.Module):
     """
     Policy-value network module.
     """
-    def __init__(self, c_trunk=128, c_gpool=32, c_head=32):
+    def __init__(self, c_policy=1, c_trunk=128, c_gpool=32, c_head=32):
         super().__init__()
 
         # common layers
@@ -129,13 +129,21 @@ class Net(nn.Module):
         )
 
         # policy & value heads
-        self.policy_head = PolicyHead(c_trunk, c_head)
+        self.policy_head = PolicyHead(c_policy, c_trunk, c_head)
         self.value_head = ValueHead(c_trunk, c_head)
 
     def forward(self, state_input):
         x = self.input_conv(state_input)
         x = self.trunk(x)
-        return self.policy_head(x).squeeze(1), self.value_head(x)
+        policy = self.policy_head(x).unbind(dim=1)
+        value = self.value_head(x)
+        return policy, value
+
+    def export_state_dict(self, policy_channels):
+        state_dict = self.state_dict()
+        state_dict['policy_head.conv2.conv.weight'] = \
+            state_dict['policy_head.conv2.conv.weight'][policy_channels]
+        return state_dict
 
 
 class InferenceGraph:
@@ -159,7 +167,7 @@ class InferenceGraph:
 
             # capture
             with torch.cuda.graph(self._graph, stream=self._stream):
-                policy_logits, value_logits = self.net(self._state)
+                (policy_logits,), value_logits = self.net(self._state)
                 self._value = F.softmax(value_logits.squeeze(0), dim=0)
                 self._policy_logits = policy_logits.squeeze(0)
 

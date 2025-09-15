@@ -62,7 +62,7 @@ class MCTS:
         node = self.root
         path = [node]
         if self.exploration:
-            action, node = node.select(self.c_puct, self.c_fpu, forced_k=2.0)
+            action, node = node.select(self.c_puct, 0, forced_k=2.0)
             state.step(action)
             path.append(node)
         while node.children:

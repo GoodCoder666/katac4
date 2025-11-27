@@ -1,19 +1,20 @@
-import matplotlib.pyplot as plt
 import json
+from collections import defaultdict
 
-run = 'b3c128nbt_2025-05-24_20-47-22'
+import matplotlib.pyplot as plt
 
+elos = defaultdict(list)
 with open('elo.json', 'r', encoding='utf-8') as file:
-    elos = {int(k): v for k, v in json.load(file).items()}
+    for player, elo in json.load(file).items():
+        run, it = player.split(':')
+        elos[run].append((int(it), elo))
 
-players = sorted(elos.keys())
-ratings = [elos[player] for player in players]
-
-plt.plot(players, ratings, marker='o', label=run)
-
-max_rating = max(ratings)
-max_player = players[ratings.index(max_rating)]
-plt.plot(max_player, max_rating, marker='o', color='red', markersize=6, label=f'Best checkpoint ({max_player}, {max_rating:.0f})')
+for run, ratings in elos.items():
+    ratings.sort()
+    if ratings[0][0] != 0:
+        ratings.insert(0, (0, 0.0))
+    epochs, scores = zip(*ratings)
+    plt.plot(epochs, scores, marker='o', label=run)
 
 plt.xlabel('Epochs')
 plt.ylabel('ELO Rating')

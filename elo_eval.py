@@ -149,12 +149,13 @@ def elo_update(elo1, elo2, outcome):
 def main():
     global ELO_K_FACTOR
     num_gpus = torch.cuda.device_count()
-    num_workers = 2 * num_gpus
+    num_workers = 4 * num_gpus
     print(f'{num_workers} workers on {num_gpus} GPUs')
 
     runs_dict = {r.name: r for r in RUNS}
 
-    elos = {}
+    benchmark_key = f'{RUNS[0].name}:00000'
+    elos = {benchmark_key: 0.0}
     if os.path.exists(SAVE_FILENAME):
         print('Initializing with existing ELO ratings')
         with open(SAVE_FILENAME, 'r', encoding='utf-8') as file:
@@ -167,7 +168,6 @@ def main():
         worker.start()
 
     game_count = 0
-    benchmark_key = f'{RUNS[0].name}:00000'
     while True:
         p1, p2, result = result_queue.get()
         elos[p1], elos[p2] = elo_update(elos.get(p1, 0), elos.get(p2, 0), result)

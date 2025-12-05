@@ -76,7 +76,7 @@ python3 elo_plot.py
 
 > [!NOTE]
 >
-> The ELO evaluation process is computationally intensive. For reference, the most recent evaluation was based on approximately 70,000 games and required 2.5 days to complete on four RTX 4090 GPUs.
+> The ELO evaluation process is computationally intensive. For reference, the most recent evaluation was based on approximately 200,000 games and required 8 days to complete on four RTX 4090 GPUs.
 
 ### Submitting to Saiblo
 
@@ -86,7 +86,7 @@ Select your best-performing model checkpoint (typically the final one or the one
 python3 export_model.py
 ```
 
-This will generate `model.pt` in the `saiblo/` directory. To create your submission, zip **only the files** inside the `saiblo/` folder—**do not include the folder itself** in the archive.
+This will generate `model.pt` and `z_lookup.npy` (for LCB move selection) in the `saiblo/` directory. To create your submission, zip **only the files** inside the `saiblo/` folder—**do not include the folder itself** in the archive.
 
 ## Explorer GUI
 

@@ -2,6 +2,8 @@
 
 An AlphaZero engine for [Saiblo Connect4](https://www.saiblo.net/game/3), featuring a pure Python implementation of key [KataGo](https://github.com/lightvector/KataGo) techniques.
 
+![Analysis GUI](./screenshots/analysis.png)
+
 ## Project Structure
 
 ```

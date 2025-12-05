@@ -1,1 +1,15 @@
+# Basic Training & Inference
 torch>=2.0.0
+numpy>=1.21.0
+tensorboard>=2.9.0
+
+# Elo Visualization
+matplotlib>=3.5.0
+
+# LCB uses scipy.stats.t
+scipy>=1.7.0
+
+# Explorer GUI
+kivy>=2.1.0
+kivy_garden.graph>=0.4.0
+plyer>=2.0.0

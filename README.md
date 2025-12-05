@@ -92,13 +92,21 @@ This will generate `model.pt` and `z_lookup.npy` (for LCB move selection) in the
 
 ## Explorer GUI
 
-The repo includes a visual explorer (`explorer_main.py`) for playing or analyzing games with a specific checkpoint.
+The repo includes a visual explorer (`explorer_main.py`) for playing or analyzing games with a specific checkpoint. Useful for:
+
+- Testing model performance against humans
+- Analyzing model behavior on custom board setups
+- Reviewing AI games from Saiblo
+
+Special thanks to [KaTrain](https://github.com/sanderland/katrain) and [LizzieYzy](https://github.com/yzyray/lizzieyzy) for inspiration on GUI design and features.
 
 > [!WARNING]
 >
 > Code for the explorer GUI is ~80% AI-generated, designed only for demonstration purposes and may contain bugs or suboptimal implementations. Feel free to report issues or contribute improvements.
 
 ### Run
+
+Set the desired model checkpoint path in `Configuration.model_path`, then run:
 
 ```bash
 python3 explorer_main.py

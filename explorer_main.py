@@ -42,6 +42,7 @@ Window.size = (1400, 800)
 class Configuration:
     """Application configuration settings."""
     model_path: str = './weights/b3c128nbt_2025-08-18_19-22-00/katac4_b3c128nbt_30000.pth'
+    use_gpu: bool = True
     n_playout: int = 1000
     c_puct: float = 1.1
     c_fpu: float = 0.2
@@ -173,22 +174,23 @@ class RoundedToggleButton(ToggleButton, RoundedShapeMixin):
 
 # --- Inference Helper ---
 class CPUInference:
-    def __init__(self, net, device):
-        self.net = net
-        self.device = device
+    def __init__(self, net, height, width):
+        dummy_input = torch.empty(1, 6, height, width, device='cpu', dtype=torch.float32)
+        net = torch.jit.trace(net.to('cpu'), dummy_input)
+        self.net = torch.jit.freeze(net)
 
-    def policy_value_fn(self, game, policy_temp=1.0):
+    def policy_value_fn(self, game):
         with torch.inference_mode():
-            state_tensor = torch.tensor(game.state(), dtype=torch.float32, device=self.device).unsqueeze(0)
+            state_tensor = torch.FloatTensor(game.state()).unsqueeze(0)
             (policy_logits,), value_logits = self.net(state_tensor)
-            
+
             value_probs = F.softmax(value_logits.squeeze(0), dim=0)
             policy_logits = policy_logits.squeeze(0)
-            
+
             sensible_moves = game.sensible_moves()
             relevant_logits = policy_logits[game.top[sensible_moves], sensible_moves]
-            
-            policy = F.softmax(relevant_logits / policy_temp, dim=0).cpu().numpy()
+
+            policy = F.softmax(relevant_logits, dim=0).numpy()
             win_rate, loss_rate, _ = value_probs.tolist()
             value = win_rate - loss_rate
         return sensible_moves, policy, value
@@ -403,7 +405,10 @@ class GameSession:
 
     def __init__(self, config: Configuration):
         self.config = config
-        self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        device_type = 'cuda' if self.config.use_gpu and torch.cuda.is_available() else 'cpu'
+        self.device = torch.device(device_type)
+        if device_type == 'cpu':
+            torch.set_num_threads(4)
         self.net = load_model(self.config.model_path).to(self.device)
         self.net.eval()
         self.z_table = LazyZTable(p=1e-5)
@@ -495,7 +500,7 @@ class GameSession:
                 return self._graph.policy_value_fn
             except Exception:
                 self._graph = None
-        cpu = CPUInference(self.net, self.device)
+        cpu = CPUInference(self.net, game.height, game.width)
         return cpu.policy_value_fn
 
 # --- UI Components ---

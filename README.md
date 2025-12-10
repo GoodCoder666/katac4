@@ -78,7 +78,7 @@ python3 elo_plot.py
 
 > [!NOTE]
 >
-> The ELO evaluation process is computationally intensive. For reference, the most recent evaluation was based on approximately 200,000 games and required 8 days to complete on four RTX 4090 GPUs.
+> The ELO evaluation process is computationally intensive. For reference, the most recent evaluation was based on approximately 300,000 games and required 8 days to complete on four RTX 4090 GPUs.
 
 ### Submitting to Saiblo
 

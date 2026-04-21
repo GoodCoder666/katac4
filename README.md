@@ -1,5 +1,7 @@
 # katac4
 
+> 如果您是清华大学的学生，并希望将 katac4 作为分析 AI 对局的工具，请移步 [inference](https://github.com/GoodCoder666/katac4/tree/inference) 分支。
+
 An AlphaZero engine for [Saiblo Connect4](https://www.saiblo.net/game/3), featuring a pure Python implementation of key [KataGo](https://github.com/lightvector/KataGo) techniques.
 
 ![Analysis GUI](./screenshots/analysis.png)

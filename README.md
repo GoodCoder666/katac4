@@ -27,3 +27,8 @@ This provides a lightweight solution for users to try out the model. It performs
    python main.py
    ```
 
+### Things to know
+
+- You can switch between **Play** and **Analysis** at any time.
+- Press **Space** to toggle analysis.
+- **"Import Game"** can read saiblo replay files.

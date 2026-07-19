@@ -1,43 +1,44 @@
 import math
 from collections import defaultdict
-from copy import deepcopy
 from time import time
 
 
 class TreeNode:
-    __slots__ = ('children', 'N', 'Q', 'avg_Q2', 'U', 'edge_P', 'state_hash')
+    __slots__ = ('N', 'Q', 'avg_Q2', 'U', 'children', 'edge_P', 'p_explored', 'state_hash')
 
     def __init__(self):
-        self.children = {}
         self.N = 0
         self.Q = 0
         self.avg_Q2 = 0
         self.U = 0
-        self.children = None # {action: (child_node, edge_N)}
-        self.edge_P = None   # Dict[action, P]
+        self.children = None    # {action: (child_node, edge_N)}
+        self.edge_P = None      # {action: P}
+        self.p_explored = 0.0   # sum of priors for visited edges
         self.state_hash = None
 
     def select(self, c_puct, c_fpu):
-        p_explored = sum(
-            self.edge_P[action]
-            for action, (_, edge_N) in self.children.items() if edge_N > 0
-        )
-        fpu_penalty = c_fpu * math.sqrt(p_explored)
         if self.N > 2:
             c_puct *= self.cpuct_scaler
-        def uct(edge):
-            action, (child, edge_N) = edge
-            edge_Q = -child.Q if child else self.Q - fpu_penalty
-            return edge_Q + c_puct * self.edge_P[action] * math.sqrt(self.N) / (1 + edge_N)
-        return max(self.children.items(), key=uct)
+        c_puct *= math.sqrt(self.N)
+        fpu_Q = self.Q - c_fpu * math.sqrt(self.p_explored)
+        best_score = -math.inf
+        for action, edge in self.children.items():
+            child, edge_N = edge
+            edge_Q = -child.Q if child else fpu_Q
+            score = edge_Q + c_puct * self.edge_P[action] / (1 + edge_N)
+            if score > best_score:
+                best_action, best_edge, best_score = action, edge, score
+        return best_action, best_edge
 
     def update(self):
-        self.Q = (self.U - sum(child.Q * edge_N for child, edge_N in self.children.values() if edge_N > 0)
-                  ) / self.N
-        self.avg_Q2 = (
-            self.U * self.U +
-            sum(child.avg_Q2 * edge_N for child, edge_N in self.children.values() if edge_N > 0)
-        ) / self.N
+        sum_Q = self.U
+        sum_Q2 = self.U * self.U
+        for child, edge_N in self.children.values():
+            if edge_N > 0:
+                sum_Q -= child.Q * edge_N
+                sum_Q2 += child.avg_Q2 * edge_N
+        self.Q = sum_Q / self.N
+        self.avg_Q2 = sum_Q2 / self.N
 
     @property
     def var(self):
@@ -68,7 +69,7 @@ class MCGS:
         return self.z_table[0 if df < 1 else min(df, len(self.z_table)) - 1]
 
     def _playout(self, state):
-        state = deepcopy(state)
+        state = state.clone()
         node = self.root
         path = []  # does not include leaf
         while node.children:
@@ -77,6 +78,8 @@ class MCGS:
             state.step(action)
             if child is None:
                 child = self.nodes_by_hash[state.hash]
+            if edge_N == 0:
+                node.p_explored += node.edge_P[action]
             node.children[action] = (child, edge_N + 1)
             node = child
         if state.is_terminal():

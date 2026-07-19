@@ -8,11 +8,16 @@ ZOBRIST_TABLE = {
 }
 
 class ConnectFour:
+    __slots__ = ('height', 'width', 'forbidden_point', 'board', 'top',
+                 'player', 'winner', 'last_opp_move', 'last_ths_move', '_hash')
+
     def __init__(self, height=None, width=None, forbidden_point=None):
         self.height = height or random.randint(9, 12)
         self.width = width or random.randint(9, 12)
-        self.forbidden_point = forbidden_point or \
-            (random.randint(0, self.height-1), random.randint(0, self.width-1))
+        self.forbidden_point = tuple(forbidden_point or (
+            random.randint(0, self.height - 1),
+            random.randint(0, self.width - 1)
+        ))
         self.board = np.zeros((self.height, self.width), dtype=np.float32)
         self.top = np.zeros(self.width, dtype=np.int32)
         if self.forbidden_point[0] == 0:
@@ -89,6 +94,23 @@ class ConnectFour:
         elif np.all(self.top == self.height):
             self.winner = 0
         self.player *= -1
+
+    def clone(self):
+        result = object.__new__(type(self))
+
+        result.height = self.height
+        result.width = self.width
+        result.forbidden_point = self.forbidden_point
+
+        result.board = self.board.copy()
+        result.top = self.top.copy()
+
+        result.player = self.player
+        result.winner = self.winner
+        result.last_opp_move = self.last_opp_move
+        result.last_ths_move = self.last_ths_move
+        result._hash = self._hash
+        return result
 
     def __str__(self):
         marks = np.full((self.height, self.width), '-')
